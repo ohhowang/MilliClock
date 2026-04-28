@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MilliClock</title>
+  <link rel="canonical" href="https://milliclock.ohho.wang/">
+  <link rel="icon" type="image/svg+xml" href="https://milliclock.ohho.wang/favicon.svg">
+  <meta name="description" content="MilliClock 是一个极简全屏毫秒时钟，显示 HH:mm:ss:SSS，自动放大适配桌面与移动端，支持深浅色主题切换。">
+  <meta name="keywords" content="MilliClock, full screen clock, millisecond clock, digital clock, online clock, HH:mm:ss:SSS, fullscreen timer, 极简时钟, 毫秒时钟, 全屏时钟">
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
+  <meta name="application-name" content="MilliClock">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MilliClock">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#050505">
+  <meta name="format-detection" content="telephone=no">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MilliClock">
+  <meta property="og:url" content="https://milliclock.ohho.wang/">
+  <meta property="og:title" content="MilliClock">
+  <meta property="og:description" content="极简全屏毫秒时钟，支持 HH:mm:ss:SSS 显示、自动最大化排版、桌面与移动端适配，以及深浅色主题切换。">
+  <meta property="og:image" content="https://milliclock.ohho.wang/og-card.png">
+  <meta property="og:image:secure_url" content="https://milliclock.ohho.wang/og-card.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="MilliClock 的分享预览图：极简深色全屏毫秒时钟。">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://milliclock.ohho.wang/">
+  <meta name="twitter:title" content="MilliClock">
+  <meta name="twitter:description" content="极简全屏毫秒时钟，支持 HH:mm:ss:SSS 显示、自动最大化排版、桌面与移动端适配，以及深浅色主题切换。">
+  <meta name="twitter:image" content="https://milliclock.ohho.wang/og-card.png">
+  <meta name="twitter:image:alt" content="MilliClock 的分享预览图：极简深色全屏毫秒时钟。">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "MilliClock",
+      "url": "https://milliclock.ohho.wang/",
+      "image": "https://milliclock.ohho.wang/og-card.png",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "description": "MilliClock 是一个极简全屏毫秒时钟，显示 HH:mm:ss:SSS，自动放大适配桌面与移动端，支持深浅色主题切换。",
+      "inLanguage": "zh-CN",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #050505;
+      --text: #f7f7f2;
+      --main-size: 160px;
+      color-scheme: dark;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f5f5ef;
+      --text: #111111;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      font-family: "JetBrains Mono", "IBM Plex Mono", "SF Mono", "Fira Code", "Input Mono", "Menlo", "Monaco", "Consolas", monospace;
+      transition: background-color 180ms ease, color 180ms ease;
+      user-select: none;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding: clamp(18px, 2.6vw, 40px) clamp(40px, 6vw, 96px);
+    }
+
+    .clock-wrap {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      display: inline-flex;
+      width: max-content;
+      height: max-content;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
+      transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+
+    .clock {
+      display: inline-flex;
+      align-items: flex-end;
+      justify-content: center;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums lining-nums;
+      letter-spacing: -0.055em;
+      line-height: 0.82;
+      text-rendering: geometricPrecision;
+      filter: drop-shadow(0 0 18px color-mix(in srgb, var(--text) 8%, transparent));
+    }
+
+    .main {
+      font-size: var(--main-size);
+      font-weight: 700;
+    }
+
+    .ms {
+      font-size: calc(var(--main-size) / 2);
+      font-weight: 640;
+      line-height: 1;
+      align-self: flex-end;
+      margin-left: 0.05em;
+      padding-bottom: 0;
+      opacity: 0.92;
+    }
+
+    .measure {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      .stage {
+        padding: clamp(18px, 3.2vw, 28px) clamp(18px, 4.8vw, 28px);
+      }
+
+      .clock-wrap {
+        transform: translate(-50%, -50%) rotate(90deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="sr-only">
+    <h1>MilliClock 全屏毫秒时钟</h1>
+    <p>MilliClock 提供 HH:mm:ss:SSS 格式的全屏数字时钟，支持自动最大字号、桌面与移动端适配、屏幕旋转展示，以及深浅色主题切换。</p>
+  </section>
+
+  <main class="stage" id="stage">
+    <div class="clock-wrap" id="clockWrap">
+      <div class="clock" id="clock" aria-live="off">
+        <span class="main" id="mainTime">00:00:00</span>
+        <span class="ms" id="msTime">000</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="clock measure" id="measure" aria-hidden="true">
+    <span class="main" id="measureMain">88:88:88</span>
+    <span class="ms" id="measureMs">888</span>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const stage = document.getElementById("stage");
+    const mainTime = document.getElementById("mainTime");
+    const msTime = document.getElementById("msTime");
+    const measure = document.getElementById("measure");
+    const measureMain = document.getElementById("measureMain");
+    const measureMs = document.getElementById("measureMs");
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    const themeStorageKey = "fliptime-theme";
+    const mobileBreakpoint = 768;
+    const doubleTapThreshold = 320;
+    let lastPointerUpAt = 0;
+    let lastThemeToggleAt = 0;
+
+    const pad = (value, length = 2) => String(value).padStart(length, "0");
+
+    function isMobileViewport() {
+      return window.innerWidth <= mobileBreakpoint;
+    }
+
+    function applyTheme(theme) {
+      root.dataset.theme = theme === "light" ? "light" : "dark";
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute("content", root.dataset.theme === "light" ? "#f5f5ef" : "#050505");
+      }
+    }
+
+    function toggleTheme() {
+      const now = Date.now();
+      if (now - lastThemeToggleAt < 220) {
+        return;
+      }
+
+      lastThemeToggleAt = now;
+      const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+      applyTheme(nextTheme);
+      localStorage.setItem(themeStorageKey, nextTheme);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      mainTime.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      msTime.textContent = pad(now.getMilliseconds(), 3);
+    }
+
+    function fits(mainSize) {
+      measureMain.style.fontSize = `${mainSize}px`;
+      measureMs.style.fontSize = `${mainSize / 2}px`;
+
+      const stageStyle = getComputedStyle(stage);
+      const paddingX = parseFloat(stageStyle.paddingLeft) + parseFloat(stageStyle.paddingRight);
+      const paddingY = parseFloat(stageStyle.paddingTop) + parseFloat(stageStyle.paddingBottom);
+      const availableWidth = Math.max(stage.clientWidth - paddingX, 0);
+      const availableHeight = Math.max(stage.clientHeight - paddingY, 0);
+
+      if (isMobileViewport()) {
+        return measure.offsetWidth <= availableHeight && measure.offsetHeight <= availableWidth;
+      }
+
+      return measure.offsetWidth <= availableWidth && measure.offsetHeight <= availableHeight;
+    }
+
+    function fitClock() {
+      let low = 24;
+      let high = Math.max(stage.clientWidth, stage.clientHeight);
+      let best = low;
+
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        if (fits(mid)) {
+          best = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+
+      root.style.setProperty("--main-size", `${best}px`);
+    }
+
+    function queueFit() {
+      requestAnimationFrame(fitClock);
+    }
+
+    function startClock() {
+      function frame() {
+        updateClock();
+        requestAnimationFrame(frame);
+      }
+
+      frame();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.repeat || event.defaultPrevented) {
+        return;
+      }
+
+      if (event.key.toLowerCase() === "t") {
+        toggleTheme();
+      }
+    });
+
+    document.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      toggleTheme();
+    });
+
+    document.addEventListener("pointerup", (event) => {
+      if (event.pointerType !== "touch" || !event.isPrimary) {
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastPointerUpAt <= doubleTapThreshold) {
+        toggleTheme();
+        lastPointerUpAt = 0;
+        return;
+      }
+
+      lastPointerUpAt = now;
+    }, { passive: true });
+
+    const savedTheme = localStorage.getItem(themeStorageKey) || "dark";
+    applyTheme(savedTheme);
+    updateClock();
+    fitClock();
+    startClock();
+
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(queueFit).observe(stage);
+    } else {
+      window.addEventListener("resize", queueFit);
+    }
+
+    if (document.fonts && "ready" in document.fonts) {
+      document.fonts.ready.then(queueFit);
+    } else {
+      window.addEventListener("load", queueFit, { once: true });
+    }
+  </script>
+</body>
+</html>
